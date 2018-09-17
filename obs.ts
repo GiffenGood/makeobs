@@ -1,9 +1,9 @@
 
 export function run() {
-    let x = map(map(myObservable,(x)=>x*2),(x)=>x+1);
+    let x = map(myObservable, (x) => x * 3);
 
     x.subscribe({
-        next: (v) => console.log(v),
+        next: (v) => console.log(`in observer ${v}`),
         complete: () => console.log('complete')
     })
 }
@@ -44,9 +44,9 @@ class DataSource {
     }
 }
 
-class SafeObserver {
+class SafeObserver<T> {
     isUnsubscribed = false;
-    unsub: () => void;
+    unsub: UnsubscribeFunc;
 
     constructor(private destination: IObserver) {
     }
@@ -55,6 +55,7 @@ class SafeObserver {
         // only try to next if you're subscribed have a handler
         if (!this.isUnsubscribed && this.destination.next) {
             try {
+                console.log(`so next ${value}`);
                 this.destination.next(value);
             } catch (err) {
                 // if the provided handler errors, teardown resources, then throw
@@ -68,6 +69,7 @@ class SafeObserver {
         // only try to emit error if you're subscribed and have a handler
         if (!this.isUnsubscribed && this.destination.error) {
             try {
+                console.log(`so error ${err}`);
                 this.destination.error(err);
             } catch (e2) {
                 // if the provided handler errors, teardown resources, then throw
@@ -82,6 +84,7 @@ class SafeObserver {
         // only try to emit completion if you're subscribed and have a handler
         if (!this.isUnsubscribed && this.destination.complete) {
             try {
+                console.log(`so complete`);
                 this.destination.complete();
             } catch (err) {
                 // if the provided handler errors, teardown resources, then throw
@@ -100,14 +103,14 @@ class SafeObserver {
     }
 }
 
-type unsubscribeFunc = () => void;
-type subscribeFunc = (observer: IObserver) => unsubscribeFunc;
+type UnsubscribeFunc = () => void;
+type SubscribeFunc<T> = (observer: IObserver) => UnsubscribeFunc;
 
 /**
  * Observable basic implementation
  */
-class Observable {
-    constructor(private _subscribe: subscribeFunc) {
+class Observable<T> {
+    constructor(private _subscribe: SubscribeFunc<T>) {
     }
 
     subscribe(observer: IObserver) {
@@ -119,6 +122,7 @@ class Observable {
 
 const myObservable = new Observable((observer) => {
     const datasource = new DataSource();
+    console.log('datasource created');
     datasource.ondata = (e) => observer.next(e);
     datasource.onerror = (err) => observer.error(err);
     datasource.oncomplete = () => observer.complete();
@@ -126,16 +130,18 @@ const myObservable = new Observable((observer) => {
     return () => datasource.destroy();
 });
 
-function map(source: Observable, project) : Observable {
+
+
+function map<T>(source: Observable<T>, project): Observable<any> {
     return new Observable((observer) => {
-      const mapObserver = {
-        next: (x) => observer.next(project(x)),
-        error: (err) => observer.error(err),
-        complete: () => observer.complete()
-      };
-      return source.subscribe(mapObserver);
+        const mapObserver = {
+            next: (x) => observer.next(project(x)),
+            error: (err) => observer.error(err),
+            complete: () => observer.complete()
+        };
+        return source.subscribe(mapObserver);
     });
-  }
+}
 
 
 
