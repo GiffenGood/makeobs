@@ -47,7 +47,7 @@ class DataSource {
     }
 }
 
-class SafeObserver<T> {
+class SafeObserver {
     isUnsubscribed = false;
     unsub: UnsubscribeFunc;
 
@@ -107,13 +107,13 @@ class SafeObserver<T> {
 }
 
 type UnsubscribeFunc = () => void;
-type SubscribeFunc<T> = (observer: IObserver) => UnsubscribeFunc;
+type SubscribeFunc = (observer: IObserver) => UnsubscribeFunc;
 
 /**
  * Observable basic implementation
  */
-class Observable<T> {
-    constructor(private _subscribe: SubscribeFunc<T>) {
+class Observable {
+    constructor(private _subscribe: SubscribeFunc) {
     }
 
     subscribe(observer: IObserver) {
@@ -135,7 +135,7 @@ const myObservable = new Observable((observer) => {
 
 
 
-function map<T>(source: Observable<T>, project): Observable<any> {
+function map<T>(source: Observable, project): Observable {
     return new Observable((observer) => {
         const mapObserver = {
             next: (x) => observer.next(project(x)),
