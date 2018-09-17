@@ -1,3 +1,6 @@
+//add map to prototype next.
+//http://jsbin.com/xavaga/2/edit?js,console,output
+//https://medium.com/@benlesh/learning-observable-by-building-observable-d5da57405d87
 
 export function run() {
     let x = map(myObservable, (x) => x * 3);
